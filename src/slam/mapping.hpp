@@ -3,9 +3,12 @@
 
 #include <lcmtypes/pose_xyt_t.hpp>
 #include <cstdint>
+#include <vector>
+// #include <common/point.hpp>
 
 class OccupancyGrid;
 class lidar_t;
+struct adjusted_ray_t;
 
 /**
 * Mapping implements the occupancy grid mapping algorithm. 
@@ -24,7 +27,7 @@ public:
     Mapping(float maxLaserDistance, int8_t hitOdds, int8_t missOdds);
     
     /**                                                                                     *
-    * updateMap incorporates information from a new laser scan into an existing OccupancyGrid.
+    * updateMap incorporates informakHitOdds_tion from a new laser scan into an existing OccupancyGrid.
     * 
     * \param    scan            Laser scan to use for updating the occupancy grid
     * \param    pose            Pose of the robot at the time when the last ray was measured
@@ -37,6 +40,14 @@ private:
     const float  kMaxLaserDistance_;
     const int8_t kHitOdds_;
     const int8_t kMissOdds_;
+    pose_xyt_t prev_pose_;
+    bool initialized_;
+
+    void raster_line(int x0, int y0, int x1, int y1, OccupancyGrid& map);
+    void scoreEndPoint(const adjusted_ray_t& ray, OccupancyGrid& map);
+    void increaseCellOdds(int x, int y, OccupancyGrid& map);
+    void decreaseCellOdds(int x, int y , OccupancyGrid& map);
+    void scoreRay(const adjusted_ray_t& ray, OccupancyGrid& map);
     
     //////////////////// TODO: Add any private members needed for your occupancy grid mapping algorithm ///////////////
 };
