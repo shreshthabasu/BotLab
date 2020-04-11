@@ -78,9 +78,8 @@ particle_t ActionModel::applyAction(const particle_t& sample)
 {
     ////////////// TODO: Implement your code for sampling new poses from the distribution computed in updateAction //////////////////////
     // Make sure you create a new valid particle_t. Don't forget to set the new time and new parent_pose.
-    
+    particle_t newSample = sample;
     if (moved_) {
-        particle_t newSample = sample;
         double sampledRot1 = std::normal_distribution<>(delrot1_, rot1Std_) (numberGen_);
         double sampledTrans = std::normal_distribution<>(deltrans_, transStd_) (numberGen_);
         double sampledRot2 = std::normal_distribution<>(delrot2_, rot2Std_) (numberGen_);
@@ -90,12 +89,10 @@ particle_t ActionModel::applyAction(const particle_t& sample)
         newSample.pose.theta = wrap_to_pi(sample.pose.theta + sampledRot1 + sampledRot2);
         newSample.pose.utime = utime_;
         newSample.parent_pose = sample.pose;        
-        return newSample;
     } else {
         particle_t newSample = sample;
         newSample.pose.utime = utime_;
         newSample.parent_pose = sample.pose;
-        return newSample;
     }
-  
+    return newSample;
 }
