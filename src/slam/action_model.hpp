@@ -3,6 +3,7 @@
 
 #include <lcmtypes/pose_xyt_t.hpp>
 #include <random>
+#include <stdbool.h>
 
 struct particle_t;
 
@@ -30,8 +31,10 @@ class ActionModel
 public:
     
     /**
-    * Constructor for ActionModel.
+    * Constructor for ActionModel
+    * 
     */
+ 
     ActionModel(void);
     
     /**
@@ -54,7 +57,23 @@ public:
     particle_t applyAction(const particle_t& sample);
     
 private:
-    
+    double alpha1_;
+    double alpha3_;
+    bool initialized_;
+
+    double delrot1_;
+    double delrot2_;
+    double deltrans_;
+    bool moved_;
+    uint64_t utime_;
+    pose_xyt_t prevOdometry_;
+
+    double rot1Std_;
+    double rot2Std_;
+    double transStd_;
+
+    std::mt19937 numberGen_;
+
     ////////// TODO: Add private member variables needed for you implementation ///////////////////
 };
 
