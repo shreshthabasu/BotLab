@@ -272,14 +272,15 @@ void OccupancyGridSLAM::updateLocalization(void)
 
 
 void OccupancyGridSLAM::updateMap(void)
-{
+{   
+    
     if(mode_ != localization_only || mode_ != action_only)
     {
         // Process the map
         mapper_.updateMap(currentScan_, currentPose_, map_);
         haveMap_ = true;
     }
-
+    // haveMap_ = true;
     // Publish the map even in localization-only mode to ensure the visualization is meaningful
     // Send every 5th map -- about 1Hz update rate for map output -- can change if want more or less during operation
     if(mapUpdateCount_ % 5 == 0)

@@ -1,9 +1,12 @@
 #ifndef SLAM_SENSOR_MODEL_HPP
 #define SLAM_SENSOR_MODEL_HPP
+#include <common/point.hpp>
 
 class  lidar_t;
 class  OccupancyGrid;
 struct particle_t;
+struct adjusted_ray_t;
+
 
 /**
 * SensorModel implement a sensor model for computing the likelihood that a laser scan was measured from a
@@ -35,9 +38,11 @@ public:
     * \return   Likelihood of the particle given the current map and laser scan.
     */
     double likelihood(const particle_t& particle, const lidar_t& scan, const OccupancyGrid& map);
+    double scoreRay(const adjusted_ray_t& ray, const OccupancyGrid& map);
+    Point<int> raster_line(int x0, int y0, int x1, int y1);
 
 private:
-    
+    bool initialized_;
     ///////// TODO: Add any private members for your SensorModel ///////////////////
 };
 

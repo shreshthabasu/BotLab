@@ -7,8 +7,8 @@
 
 
 ActionModel::ActionModel(void)
-: alpha1_ (0.003f)
-, alpha3_ (0.1)
+: alpha1_ (0.8)
+, alpha3_ (0.35)
 , initialized_ (false)
 {
     //////////////// TODO: Handle any initialization for your ActionModel /////////////////////////
@@ -53,12 +53,12 @@ bool ActionModel::updateAction(const pose_xyt_t& odometry)
     deltrans_ *= dir;
     delrot2_ = angle_diff(deltaTheta, delrot1_);
 
-    if (fabs(deltrans_) > 0.0001f || fabs(delrot2_) > 0.0001f) {
+    if (fabs(deltaX) > 0.001 || fabs(deltaY) > 0.001 || fabs(deltaTheta) > 0.001) {
         moved_ = true;
     } 
 
     // rot1Std_ = alpha1_ * powl(delrot1_, 2) + alpha2_ * powl(deltrans_, 2);
-    // transStd_ = alpha3_ * powl(deltrans_, 2) + alpha4_ * (powl(delrot1_, 2) * powl(delrot2_, 2));
+    // transStd_ = alpha3_ * powl(deltrans_, 2);
     // rot2Std_ = alpha1_ * powl(delrot2_, 2) + alpha2_ * powl(deltrans_, 2);
 
     rot1Std_ = alpha1_ * fabs(delrot1_);
