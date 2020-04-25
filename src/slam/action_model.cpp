@@ -53,10 +53,10 @@ bool ActionModel::updateAction(const pose_xyt_t& odometry)
     deltrans_ *= dir;
     delrot2_ = angle_diff(deltaTheta, delrot1_);
 
-    if (fabs(deltaX) > 0.001 || fabs(deltaY) > 0.001 || fabs(deltaTheta) > 0.001) {
+    if (fabs(deltaX) > 0.0001 || fabs(deltaY) > 0.0001 || fabs(deltaTheta) > 0.0001) {
         moved_ = true;
     } 
-
+   
     // rot1Std_ = alpha1_ * powl(delrot1_, 2) + alpha2_ * powl(deltrans_, 2);
     // transStd_ = alpha3_ * powl(deltrans_, 2);
     // rot2Std_ = alpha1_ * powl(delrot2_, 2) + alpha2_ * powl(deltrans_, 2);
