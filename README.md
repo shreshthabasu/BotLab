@@ -24,7 +24,7 @@
     - the subdirectories will have a further description of their contents
     
 
-### = Files ===
+### Files 
 
 setenv.sh
     - a script for setting environment variables needed for running Vx applications
