@@ -3,11 +3,11 @@
 
 ### Directories
 
-1:bin/
+1. bin/
     - where all built binaries are located
     - you'll be using this directory a lot
     
-2: data/
+2. data/
     - where data needed to run parts of the assignment are located
     - log files and target files for SLAM and exploration are here
     
@@ -34,7 +34,7 @@ setenv.sh
 ___________________________________________________________________________________________
 ## Run the code:
 
--./bin/botgui : GUI for robot in the environment
+- ./bin/botgui : GUI for robot in the environment
 - run a log file form /data using lcm-logplayer-gui
 - Other files in the /bin directory based on which part of the code you want to run
 - /src/sim/sim.py path_to_map(present in /data)
