@@ -1,6 +1,7 @@
 
-#Reposiory Structure
-=== Directories ===
+## Reposiory Structure
+
+## Directories ===
 
 = bin/
     - where all built binaries are located
@@ -23,7 +24,7 @@
     - the subdirectories will have a further description of their contents
     
 
-=== Files ===
+## = Files ===
 
 = setenv.sh
     - a script for setting environment variables needed for running Vx applications
@@ -38,16 +39,16 @@ ________________________________________________________________________________
 = Other files in the /bin directory based on which part of the code you want to run
 = /src/sim/sim.py path_to_map(present in /data)
 
-#Occupancy grid mappy
+## Occupancy grid mappy
 Implemented occupancy grid mapping using sensor inversion model.
 = run a log, botgui
 = run ./slam --mapping-only
 
-#SLAM
+## SLAM
 = run botgui
 = run ./slam
 
-# SLAM with path planning and exploration
+## SLAM with path planning and exploration
 = run sim.py, botgui
 =in /bin, run:
     = ./timesync
