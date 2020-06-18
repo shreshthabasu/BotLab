@@ -10,6 +10,7 @@
 #include <queue>
 #include <unistd.h>
 #include <cassert>
+#include <list>
 
 const float kReachedPositionThreshold = 0.05f;  // must get within this distance of a position for it to be explored
 
@@ -47,7 +48,7 @@ Exploration::Exploration(int32_t teamNumber,
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
     
     MotionPlannerParams params;
-    params.robotRadius = 0.2;
+    params.robotRadius = 0.17;
     planner_.setParams(params);
 }
 
@@ -197,7 +198,7 @@ void Exploration::executeStateMachine(void)
         std::cout << "INFO: Exploration: A new path was created on this iteration. Sending to Mbot:\n";
 
         std::cout << "path timestamp: " << currentPath_.utime << "\npath: ";
-
+        std::cout<<currentPath_.path.size()<<std::endl;
         for(auto pose : currentPath_.path){
             std::cout << "(" << pose.x << "," << pose.y << "," << pose.theta << "); ";
         }std::cout << "\n";
@@ -220,6 +221,7 @@ int8_t Exploration::executeInitializing(void)
     status.team_number = teamNumber_;
     status.state = exploration_status_t::STATE_INITIALIZING;
     status.status = exploration_status_t::STATUS_COMPLETE;
+    distThreshold = 0.3;
     
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
     
@@ -245,6 +247,31 @@ int8_t Exploration::executeExploringMap(bool initialize)
     */
     
     /////////////////////////////// End student code ///////////////////////////////
+    printf("EXPLORE\n");
+    planner_.setMap(currentMap_);
+    frontiers_ = find_map_frontiers(currentMap_, currentPose_);
+    planner_.setNumFrontiers(frontiers_.size());
+    //float distThreshold = 0.3;
+    float currDist;
+
+
+    if (currentTarget_.x != 0 || currentTarget_.y != 0){
+        currDist = sqrt(pow(currentPose_.x - currentTarget_.x, 2) + pow(currentPose_.y - currentTarget_.y, 2));   
+    } else{
+        currDist = 0;
+    }
+
+    std::cout<<"dist: "<<currDist<<std::endl;
+    if ((currDist <= distThreshold && !frontiers_.empty())) {
+        currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
+        if (currentPath_.path_length > 1) {
+            currentTarget_ = currentPath_.path[currentPath_.path_length - 1];
+            currDist = sqrt(pow(currentPose_.x - currentTarget_.x, 2) + pow(currentPose_.y - currentTarget_.y, 2));
+            distThreshold = currDist * 1.0 / 3.0;
+        } 
+        //currDist = sqrt(pow(currentPose_.x - currentTarget_.x, 2) + pow(currentPose_.y - currentTarget_.y, 2));
+        
+    }
     
     /////////////////////////   Create the status message    //////////////////////////
     exploration_status_t status;
@@ -301,7 +328,69 @@ int8_t Exploration::executeReturningHome(bool initialize)
     *       (1) dist(currentPose_, targetPose_) < kReachedPositionThreshold  :  reached the home pose
     *       (2) currentPath_.path_length > 1  :  currently following a path to the home pose
     */
+    double distToHome = distance_between_points(Point<float>(homePose_.x, homePose_.y), 
+                                                Point<float>(currentPose_.x, currentPose_.y));
+    printf("RETURN HOME\n");
+    std::cout<<distToHome<<std::endl;
+    planner_.setMap(currentMap_);
+    planner_.setNumFrontiers(frontiers_.size());
+    Point<float> goalPoint(homePose_.x - 0.1, homePose_.y - 0.1);
+    Point<int> goalCell = global_position_to_grid_cell(goalPoint, currentMap_); 
+    float currDist;
+    pose_xyt_t tempPose = homePose_;
+    tempPose.x -= 0.1;
+    tempPose.y -= 0.1;
+
+    if (currentTarget_.x != 0 || currentTarget_.y != 0){
+        currDist = sqrt(pow(currentPose_.x - currentTarget_.x, 2) + pow(currentPose_.y - currentTarget_.y, 2));   
+    } else{
+        currDist = 0;
+    }
+    std::cout<<"disttohome"<<distToHome<<"currDist:"<<currDist<<distThreshold<<std::endl;
     
+    if (currDist <= distThreshold) {
+        robot_path_t plannedPath = planner_.planPath(currentPose_, tempPose);
+        while (!(plannedPath.path.size() > 1)){
+            pose_xyt_t validPose = getValidCell(goalCell, currentMap_, planner_);
+            plannedPath = planner_.planPath(currentPose_, validPose);
+            if (plannedPath.path.size() > 1) {
+                if (distToHome < 0.6) {
+                    currentTarget_ = tempPose;
+                    distThreshold = kReachedPositionThreshold;
+                } else {
+                    currDist = sqrt(pow(currentPose_.x - currentTarget_.x, 2) + pow(currentPose_.y - currentTarget_.y, 2));
+                    distThreshold = currDist * 1.0 / 4.0;
+                }
+            }
+        }   
+    }
+
+
+    
+    // Point<float> goalPoint(homePose_.x - 0.1, homePose_.y - 0.1);
+    // Point<int> goalCell = global_position_to_grid_cell(goalPoint, currentMap_); 
+    // if (currentTarget_.x != homePose_.x || currentTarget_.y != homePose_.y){
+    //     robot_path_t plannedPath = planner_.planPath(currentPose_, homePose_);
+    //     while (!(plannedPath.path.size() > 1)){
+    //         pose_xyt_t validPose = getValidCell(goalCell, currentMap_, planner_);
+    //         // bool isValidGoal = planner_.isValidGoal(validPose);
+    //         plannedPath = planner_.planPath(currentPose_, validPose);
+    //         if (plannedPath.path.size() > 1) {
+    //             pose_xyt_t tempPose = homePose_;
+    //             tempPose.x -= 0.1;
+    //             tempPose.y -= 0.1;
+    //             plannedPath.path.push_back(tempPose);
+    //             plannedPath.path_length += 1;
+    //         }
+    //         goalPoint.x = validPose.x;
+    //         goalPoint.y = validPose.y;
+    //         goalCell = global_position_to_grid_cell(goalPoint, currentMap_);
+    //     }
+    //     currentPath_ = plannedPath;
+    //     currentTarget_ = homePose_;
+    // }
+
+   
 
 
     /////////////////////////////// End student code ///////////////////////////////
@@ -312,21 +401,25 @@ int8_t Exploration::executeReturningHome(bool initialize)
     status.team_number = teamNumber_;
     status.state = exploration_status_t::STATE_RETURNING_HOME;
     
-    double distToHome = distance_between_points(Point<float>(homePose_.x, homePose_.y), 
+    distToHome = distance_between_points(Point<float>(homePose_.x, homePose_.y), 
                                                 Point<float>(currentPose_.x, currentPose_.y));
     // If we're within the threshold of home, then we're done.
     if(distToHome <= kReachedPositionThreshold)
     {
+        printf("STATUS COMPLETE\n");
         status.status = exploration_status_t::STATUS_COMPLETE;
     }
     // Otherwise, if there's a path, then keep following it
-    else if(currentPath_.path.size() > 1)
+    else if(currentPath_.path_length > 1)
     {
         status.status = exploration_status_t::STATUS_IN_PROGRESS;
     }
     // Else, there's no valid path to follow and we aren't home, so we have failed.
     else
     {
+        printf("FAILED");
+        std::cout<<distToHome<<std::endl;
+        std::cout<<"PATH Len:"<<currentPath_.path_length<<std::endl;
         status.status = exploration_status_t::STATUS_FAILED;
     }
     
@@ -336,8 +429,10 @@ int8_t Exploration::executeReturningHome(bool initialize)
     if(status.status == exploration_status_t::STATUS_IN_PROGRESS)
     {
         return exploration_status_t::STATE_RETURNING_HOME;
-    }
-    else // if(status.status == exploration_status_t::STATUS_FAILED)
+    } else if (status.status == exploration_status_t::STATUS_COMPLETE) {
+        return exploration_status_t::STATE_COMPLETED_EXPLORATION;
+
+    } else // if(status.status == exploration_status_t::STATUS_FAILED)
     {
         return exploration_status_t::STATE_FAILED_EXPLORATION;
     }

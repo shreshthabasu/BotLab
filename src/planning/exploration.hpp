@@ -107,6 +107,7 @@ private:
     size_t prev_frontier_size;
     bool pathReceived_;
     int64_t most_recent_path_time;
+    float distThreshold;
 //    int8_t path_redundancy_count;
 
     /////////////////////////// End student code ///////////////////////////////

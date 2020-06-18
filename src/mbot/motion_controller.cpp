@@ -87,7 +87,7 @@ public:
         
         if(haveReachedTarget())
         {
-		std::cout << "TARGET REACHED\n";
+		// std::cout << "TARGET REACHED\n";
             bool haveTarget = assignNextTarget();
             
             if(!haveTarget)
@@ -106,8 +106,8 @@ public:
             
             double targetHeading = std::atan2(target.y - pose.y, target.x - pose.x);
             double error = angle_diff(targetHeading, pose.theta);
-            std::cout << "targetHeading: " << targetHeading << ", pose Theta: " << pose.theta << std::endl;
-            std::cout << "Angle error:" << error << '\n';
+            // std::cout << "targetHeading: " << targetHeading << ", pose Theta: " << pose.theta << std::endl;
+            // std::cout << "Angle error:" << error << '\n';
 
             if(state_ == TURN)
             {
@@ -140,12 +140,12 @@ public:
                     // Turn left if the target is to the left
                     if(error > 0.0)
                     {
-                        std::cout << "Turning left\n";
+                        // std::cout << "Turning left\n";
                     }
                     // Turn right if the target is to the right
                     else // if(error < 0.0)
                     {
-                        std::cout << "Turning right\n";
+                        // std::cout << "Turning right\n";
                     }
                     cmd.trans_v = 0;
                     cmd.angular_v = turnspeed;
@@ -153,7 +153,7 @@ public:
                 }
                 else
                 {
-                    std::cout << "Entering DRIVE state.\n";
+                    // std::cout << "Entering DRIVE state.\n";
                     cmd.trans_v = 0;
                     cmd.angular_v = 0;
                     totalError_ = 0;

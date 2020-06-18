@@ -55,4 +55,6 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
                                    const OccupancyGrid& map,
                                    const MotionPlanner& planner);
 
+pose_xyt_t getValidCell(Point<int> target, const OccupancyGrid& map, const MotionPlanner& planner);
+
 #endif // PLANNING_FRONTIERS_HPP

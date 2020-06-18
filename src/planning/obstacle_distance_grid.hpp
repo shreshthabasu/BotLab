@@ -78,6 +78,7 @@ private:
     float metersPerCell_;       ///< Side length of a cell
     float cellsPerMeter_;       ///< Number of cells in a meter
     
+    
     Point<float> globalOrigin_;         ///< Origin of the grid in global coordinates
 
     void resetGrid(const OccupancyGrid& map);
@@ -90,6 +91,7 @@ private:
 
     // initialize obstacle distance grid
     void initializeDistances(const OccupancyGrid& map);
+
 
 };
 

@@ -6,7 +6,7 @@ class Rate:
     @brief      Runs code inside a with block sleeping to maintain the rate
     """
 
-    def __init__(self, rate=None, period=None, quiet=True):
+    def __init__(self, rate=None, period=None, quiet=True, real_time_factor=1.0):
         """!
         @brief      Constructs a new instance.
 
@@ -21,9 +21,9 @@ class Rate:
                             'raised')
 
         if rate is not None:
-            self.rate = rate
+            self.rate = rate * real_time_factor
         if period is not None:
-            self.period = period
+            self.period = period / real_time_factor
         self._quiet = quiet
         self._start_time = time.perf_counter()
 

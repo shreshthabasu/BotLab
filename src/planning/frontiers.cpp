@@ -6,6 +6,7 @@
 #include <queue>
 #include <set>
 #include <cassert>
+#include <list>
 
 
 bool is_frontier_cell(int x, int y, const OccupancyGrid& map);
@@ -20,6 +21,12 @@ pose_xyt_t nearest_navigable_cell(pose_xyt_t pose,
                                   const MotionPlanner& planner);
 pose_xyt_t search_to_nearest_free_space(Point<float> position, const OccupancyGrid& map, const MotionPlanner& planner);
 double path_length(const robot_path_t& path);
+// pose_xyt_t getValidCell(Point<int> target, const OccupancyGrid& map, const MotionPlanner& planner);
+
+// typedef struct Node{
+//     Point<int> cell;
+//     float
+// }Node_t;
 
 
 std::vector<frontier_t> find_map_frontiers(const OccupancyGrid& map, 
@@ -99,9 +106,24 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
     *   - The cells along the frontier might not be in the configuration space of the robot, so you won't necessarily
     *       be able to drive straight to a frontier cell, but will need to drive somewhere close.
     */
-    robot_path_t emptyPath;
-    
-    return emptyPath;
+    // float maxDistance = __FLT_MAX__;
+    Point<int> targetFrontierCell;
+    robot_path_t plannedPath;
+    for (auto& f : frontiers) {
+        Point<float> targetGlobal = f.cells[(f.cells.size()-1)/2];
+        // float distance = (float)sqrt(pow(robotPose.x - targetGlobal.x, 2) + pow(robotPose.y - targetGlobal.y, 2));
+        // if (distance <= maxDistance) {
+        //     targetFrontierCell = global_position_to_grid_cell(targetGlobal, map);
+        // }
+        targetFrontierCell = global_position_to_grid_cell(targetGlobal, map);
+        pose_xyt_t validTargetPose = getValidCell(targetFrontierCell, map, planner);
+        std::cout<<"Target frontier cell"<< targetFrontierCell.x<<","<<targetFrontierCell.y<<std::endl;
+        plannedPath = planner.planPath(robotPose, validTargetPose);
+        if (plannedPath.path.size() > 1) {
+            return plannedPath;
+        } 
+    }
+    return plannedPath;
 }
 
 
@@ -170,4 +192,52 @@ frontier_t grow_frontier(Point<int> cell, const OccupancyGrid& map, std::set<Poi
     }
     
     return frontier;
+}
+
+bool isMember(Point<int> cell, std::list<Point<int>> closedList) {
+    for (auto p: closedList) {
+        if (cell.x == p.x && cell.y == p.y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+pose_xyt_t getValidCell( Point<int> target, const OccupancyGrid& map, const MotionPlanner& planner) {
+    const int xDeltas[8] = { 1, -1, 0,  0, 1, 1, -1, -1}; 
+    const int yDeltas[8] = {0,  0, 1, -1, 1, -1, 1, -1 };
+    std::list<Point<int>> cellsToVisit;
+    std::list<Point<int>> closedList;
+    cellsToVisit.push_back(target);
+    printf("In get valid cell\n");
+    pose_xyt_t validGoalPose;
+    Point<int> validGoalCell;
+    ObstacleDistanceGrid distances = planner.obstacleDistances();
+    while(!cellsToVisit.empty()) {
+        Point<int> targetCell = cellsToVisit.front();
+        cellsToVisit.pop_front();
+        if (isMember(targetCell, closedList)) {
+            continue;
+        }
+        for (int n = 0; n < 8; n ++) {
+            validGoalCell.x = targetCell.x + xDeltas[n];
+            validGoalCell.y = targetCell.y + yDeltas[n];
+            Point<float> validGoalGlobal = grid_position_to_global_position(validGoalCell, map);
+            validGoalPose.x = validGoalGlobal.x;
+            validGoalPose.y = validGoalGlobal.y;
+            if (distances(validGoalCell.x, validGoalCell.y) > 0.15f && planner.isValidGoal(validGoalPose)) {
+                // Point<float> validGoalGlobal = grid_position_to_global_position(validGoalCell, map);
+                // validGoalPose.x = validGoalGlobal.x;
+                // validGoalPose.y = validGoalGlobal.y;
+                std::cout<<validGoalCell.x<<","<<validGoalCell.y<<","<<distances(validGoalCell.x, validGoalCell.y)<<std::endl;
+                printf("Valid Goal found \n");
+                return validGoalPose;
+            }
+            cellsToVisit.push_back(validGoalCell);
+        }
+        closedList.push_back(targetCell);
+    }
+    printf("Valid goal not foun\n");
+    return validGoalPose;
 }

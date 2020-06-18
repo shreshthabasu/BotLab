@@ -80,7 +80,6 @@ void ObstacleDistanceGrid::setDistances(const OccupancyGrid& map)
 
     std::priority_queue<DistanceNode> searchQueue;
     enqueue_obstacle_cells(map, *this, searchQueue);
-
     while(!searchQueue.empty())
     {
         DistanceNode nextNode = searchQueue.top();
@@ -89,7 +88,7 @@ void ObstacleDistanceGrid::setDistances(const OccupancyGrid& map)
         expand_node(nextNode, *this, searchQueue);
     }
     cell_t cell;
-    // printf("start\n");
+    
     for(cell.y = 0; cell.y < map.heightInCells(); ++cell.y)
     {
         for(cell.x = 0; cell.x < map.widthInCells(); ++cell.x)
@@ -100,7 +99,6 @@ void ObstacleDistanceGrid::setDistances(const OccupancyGrid& map)
             }
         }
     }
-    // printf("stop\n");
 
 }
 
@@ -185,7 +183,12 @@ void expand_node(const DistanceNode& node,
             adjacentNode.cell = adjacentCell;
             if(grid(adjacentCell.x, adjacentCell.y) == -1)
             {
-                adjacentNode.distance = node.distance + 0.05f;
+                if(node.distance == 0) {
+                    adjacentNode.distance = node.distance + 0.5 * grid.metersPerCell();
+                } else {
+                    adjacentNode.distance = node.distance + grid.metersPerCell();
+                }
+                // adjacentNode.distance = node.distance + grid.metersPerCell();
                 grid(adjacentCell.x, adjacentCell.y) = adjacentNode.distance;
                 searchQueue.push(adjacentNode);
             }

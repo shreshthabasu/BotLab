@@ -74,23 +74,27 @@ robot_path_t search_for_path(pose_xyt_t start,
        
        
         while (! openQueue.empty()) {
+            // printf("q len: %d\n",openQueue.size());
             Node currNode = openQueue.top();
             openQueue.pop();
             if(!isMember(currNode, closedQueue)) {
                 std::vector<Node> kids = expandNode(currNode);
                 for (auto& kid: kids) {
                     if (distances.isCellInGrid(kid.cell.x, kid.cell.y) && distances(kid.cell.x,kid.cell.y) > params.minDistanceToObstacle) {
-                    // if (distances.isCellInGrid(kid.cell.x, kid.cell.y) && distances(kid.cell.x,kid.cell.y) > 0) {
+                        // printf("Dist considered in A star: %f %f\n", distances(kid.cell.x,kid.cell.y), params.minDistanceToObstacle);
                         kid.parentCell = currNode.cell;
                         kid.gCost = getGCost(currNode, kid.cell);
                         kid.hCost = getHCost(kid.cell, goalCell);
                         kid.fCost = kid.gCost + kid.hCost;
                         if (distances(kid.cell.x,kid.cell.y) < params.maxDistanceWithCost) {
-                            kid.fCost += pow(params.maxDistanceWithCost - distances(kid.cell.x, kid.cell.y), params.distanceCostExponent);
+                            kid.fCost += pow(params.maxDistanceWithCost - distances(kid.cell.x, kid.cell.y), params.distanceCostExponent) * 160 + 20;
+                        }
+                        if (distances(kid.cell.x,kid.cell.y) == params.maxDistanceWithCost) {
+                            kid.fCost += 20;
                         }
                         if (isGoal(kid.cell, goalCell)) {
                             std::cout<<"FOUND GOAL, GO MAKE PATH"<<std::endl;
-                            std::cout<<openQueue.size()<<std::endl;
+                            // std::cout<<openQueue.size()<<std::endl;
                             path.path.push_back(start);
                             closedQueue.push_back(currNode);
                             makePath(&path, startNode, kid, distances, closedQueue);
@@ -98,7 +102,6 @@ robot_path_t search_for_path(pose_xyt_t start,
                         }
                         bool member = isMember(kid, closedQueue);
                         if (!member) {
-
                             openQueue.push(kid);
                         }
                     }
@@ -106,6 +109,10 @@ robot_path_t search_for_path(pose_xyt_t start,
                 closedQueue.push_back(currNode);
             }
         }
+        std::cout<<"NO PATH FOUND"<<std::endl;
+        path.path.push_back(start);
+        path.path_length = path.path.size();
+        return path;
     } 
 }
 
@@ -134,31 +141,22 @@ float getHCost(const cell_t currCell, const cell_t goalCell ) {
 }
 
 std::vector<Node> expandNode(Node currNode) {
-    const int xDeltas[8] = { 1, -1, 0,  0, 1, 1, -1, -1}; 
-    const int yDeltas[8] = {0,  0, 1, -1, 1, -1, 1, -1 };
+    const int xDeltas[4] = { 1, -1, 0,  0};//, 1, 1, -1, -1}; 
+    const int yDeltas[4] = {0,  0, 1, -1};//, 1, -1, 1, -1 };
 
     std::vector<Node> kids;
-    for(int n = 0; n < 8; ++n) {
+    for(int n = 0; n < 4; ++n) {
         cell_t adjacentCell(currNode.cell.x + xDeltas[n], currNode.cell.y + yDeltas[n]);
         Node kid;
         kid.cell = adjacentCell;
         kids.push_back(kid);
-        // if(grid.isCellInGrid(adjacentCell.x, adjacentCell.y)) { // check if cell is not obstacle + not in closed list
-        //     Node kid;
-        //     kid.parent_cell = currNode.cell;
-        //     kid.cell = adjacentCell;
-        //     kid.gCost = getGCost(currNode, kid.cell);
-        //     kid.hCost = getHCost(kid.cell, goalCell);
-        //     kid.fCost = kid.gCost + kid.hCost;
-        //     kids.push_back(kid);
-        // }
     }
     return kids;
 }
 
 
 bool isMember(Node currNode, std::vector<Node> closedQueue) {
-    for (auto& v: closedQueue) {
+    for (auto v: closedQueue) {
         if (v.cell.x == currNode.cell.x && v.cell.y == currNode.cell.y) {
             if (v.parentCell.x == currNode.parentCell.x && v.parentCell.y == currNode.parentCell.y) {
                 if (currNode.fCost < v.fCost) {
@@ -206,7 +204,6 @@ void makePath(robot_path_t* path, Node startNode, Node goalNode, const ObstacleD
         pose_xyt_t prevPose = path->path.back();
         pose_xyt_t currPose;
         Point<int> currCell = reverseCellList[j];
-        // std::cout<<"CELL:"<<currCell.x<<","<<currCell.y<<std::endl;
         Point<float> currPoint = grid_position_to_global_position(currCell, distances);
         currPose.x = currPoint.x;
         currPose.y = currPoint.y;

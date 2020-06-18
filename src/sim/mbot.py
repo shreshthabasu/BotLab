@@ -18,7 +18,7 @@ class Mbot(pygame.sprite.Sprite):
             self.pose = pose
             self.twist = twist
 
-    def __init__(self, world_map, max_trans_speed, max_angular_speed):
+    def __init__(self, world_map, max_trans_speed, max_angular_speed, real_time_factor):
         super(Mbot, self).__init__()
 
         # Model
@@ -52,6 +52,7 @@ class Mbot(pygame.sprite.Sprite):
 
         # Control
         self._trajectory_lock = threading.Lock()
+        self._real_time_factor = real_time_factor
 
     """ View """
 
@@ -161,7 +162,7 @@ class Mbot(pygame.sprite.Sprite):
             for cmd in motor_cmds:
                 # Calculate time diff
                 cmd_time = cmd.utime / 1e6
-                dt = cmd_time - start_time
+                dt = (cmd_time - start_time) * self._real_time_factor
                 dpose = self._const_vel_motion(last_state, dt)
                 # Update last state and add to trajectory
                 start_time = cmd_time
@@ -182,7 +183,7 @@ class Mbot(pygame.sprite.Sprite):
                                         cmd_time)
                 self._trajectory.append(last_state)
             # Calculate to the end of this step
-            dt = end_time - start_time
+            dt = (end_time - start_time) * self._real_time_factor
             dpose = self._const_vel_motion(last_state, dt)
             final_pose = self._handle_collision(last_state.pose + dpose, last_state.twist)
             last_state = Mbot.State(final_pose, last_state.twist, end_time)

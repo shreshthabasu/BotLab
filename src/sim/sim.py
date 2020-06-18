@@ -19,7 +19,7 @@ from mbot_motor_command_t import mbot_motor_command_t
 class Gui:
     def __init__(self, map_file, render_lidar, use_noise, lidar_dist_measure_sigma, lidar_theta_step_sigma,
                  lidar_num_ranges_noise, odom_trans_sigma, odom_rot_sigma, width, mbot_max_trans_speed,
-                 mbot_max_angular_speed):
+                 mbot_max_angular_speed, real_time_factor):
         # Model
         self._map_file = map_file
         self._use_noise = use_noise
@@ -47,6 +47,7 @@ class Gui:
         self._lcm.subscribe(self._motor_command_channel, self._motor_command_handler)
         # LCM callback thread
         self._lcm_thread = threading.Thread(target=self._handle_lcm)
+        self._real_time_factor = real_time_factor
 
         # View
         self._render_lidar = render_lidar
@@ -65,12 +66,13 @@ class Gui:
                                                         (self._map._global_origin_x, self._map._global_origin_y))
         # Mbot
         self._mbot = Mbot(self._map, max_trans_speed=self._mbot_max_trans_speed,
-                          max_angular_speed=self._mbot_max_angular_speed)
+                          max_angular_speed=self._mbot_max_angular_speed, real_time_factor=self._real_time_factor)
         # Lidar
         self._lidar = Lidar(lambda at_time: self._mbot.get_pose(at_time), self._map, self._space_converter,
                             use_noise=self._use_noise, dist_measure_sigma=self._lidar_dist_measure_sigma,
                             theta_step_sigma=self._lidar_theta_step_sigma,
-                            num_ranges_noise=self._lidar_num_ranges_noise)
+                            num_ranges_noise=self._lidar_num_ranges_noise,
+                            real_time_factor=self._real_time_factor)
         # Pygame
         pygame.init()
         height = self._space_converter.to_pixel(self._map.height * self._map.meters_per_cell)
@@ -117,7 +119,7 @@ class Gui:
             self._running = False
 
         while self._running:
-            with Rate(self._max_frame_rate):
+            with Rate(self._max_frame_rate, real_time_factor=self._real_time_factor):
                 for event in pygame.event.get():
                     self.on_event(event)
                 self.on_loop()
@@ -194,6 +196,7 @@ def parse_args():
     parser.add_argument('--width', default=640, type=int, help='Width of the screen')
     parser.add_argument('--mbot_max_trans_speed', default=3.0, type=float, help='Mbot\'s maximum translation speed')
     parser.add_argument('--mbot_max_angular_speed', default=3.0, type=float, help='Mbot\'s maximum angular speed')
+    parser.add_argument('--real_time_factor', default=1.0, type=float, help='Speed or slow down time in the simulator')
 
     return parser.parse_args()
 
@@ -211,5 +214,6 @@ if __name__ == "__main__":
               odom_rot_sigma=args.odom_rot_sigma,
               width=args.width,
               mbot_max_trans_speed=args.mbot_max_trans_speed,
-              mbot_max_angular_speed=args.mbot_max_angular_speed)
+              mbot_max_angular_speed=args.mbot_max_angular_speed,
+              real_time_factor=args.real_time_factor)
     sim.on_execute()

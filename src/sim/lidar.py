@@ -14,7 +14,7 @@ from lidar_t import lidar_t
 
 class Lidar(pygame.sprite.Sprite):
     def __init__(self, get_current_pose, world_map, space_converter, use_noise, dist_measure_sigma, theta_step_sigma,
-                 num_ranges_noise):
+                 num_ranges_noise, real_time_factor):
         super(Lidar, self).__init__()
         # Model
         self._get_current_pose = get_current_pose
@@ -38,6 +38,7 @@ class Lidar(pygame.sprite.Sprite):
         self._lcm = lcm.LCM('udpm://239.255.76.67:7667?ttl=2')
         self._thread = threading.Thread(target=self.scan)
         self._running = False
+        self._real_time_factor = real_time_factor
 
         # View
         self._space_converter = space_converter
@@ -73,7 +74,7 @@ class Lidar(pygame.sprite.Sprite):
 
     def scan(self):
         while self._running:
-            with Rate(self._scan_rate):
+            with Rate(self._scan_rate, real_time_factor=self._real_time_factor):
                 now = time.perf_counter()
                 num_ranges = self._num_ranges
                 theta = 0

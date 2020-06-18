@@ -7,8 +7,8 @@
 
 
 ActionModel::ActionModel(void)
-: alpha1_ (0.8)
-, alpha3_ (0.35)
+: alpha1_ (0.8) //0.8
+, alpha3_ (0.35) //0.35
 , initialized_ (false)
 {
     //////////////// TODO: Handle any initialization for your ActionModel /////////////////////////
@@ -46,7 +46,7 @@ bool ActionModel::updateAction(const pose_xyt_t& odometry)
         dir *= -1;
         delrot1_ = -angle_diff(M_PI, delrot1_);
     } else if (delrot1_ < -M_PI / 2) {
-        dir *= -1;
+        dir *= -1;  
         delrot1_ = -angle_diff(-M_PI, delrot1_);
     }
 
@@ -57,13 +57,15 @@ bool ActionModel::updateAction(const pose_xyt_t& odometry)
         moved_ = true;
     } 
    
-    // rot1Std_ = alpha1_ * powl(delrot1_, 2) + alpha2_ * powl(deltrans_, 2);
-    // transStd_ = alpha3_ * powl(deltrans_, 2);
-    // rot2Std_ = alpha1_ * powl(delrot2_, 2) + alpha2_ * powl(deltrans_, 2);
+    // rot1Std_ = 0.05;//alpha1_ * powl(delrot1_, 2) + alpha2_ * powl(deltrans_, 2);
+    // transStd_ = 0.005;//alpha3_ * powl(deltrans_, 2);
+    // rot2Std_ = 0.05;//alpha1_ * powl(delrot2_, 2) + alpha2_ * powl(deltrans_, 2);
 
-    rot1Std_ = alpha1_ * fabs(delrot1_);
-    transStd_ = alpha3_ * fabs(deltrans_);
-    rot2Std_ = alpha1_ * fabs(delrot2_);
+    rot1Std_ = alpha1_ * fabs(delrot1_); //0.05
+    transStd_ = alpha3_ * fabs(deltrans_); //0.005
+    rot2Std_ = alpha1_ * fabs(delrot2_); //0.5
+    // std::cout<<rot1Std_<<"<"<<transStd_<<","<<rot2Std_<<std::endl;
+
 
     prevOdometry_ = odometry;
     
